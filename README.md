@@ -20,16 +20,32 @@ This project focuses on creating a clean, responsive, and visually appealing use
 
 ## 📱 Screens Included
 
-- Home Screen
-- Catalogue Screen
-- Product Details Screen
-- Wishlist Screen
-- Cart Screen
-- Profile Screen
-- Login Screen
-- Register Screen
+-## 📸 Screenshots
 
----
+<p align="center">
+  <img src="screenshots/welcome.png" width="200"/>
+  <img src="screenshots/login.png" width="200"/>
+  <img src="screenshots/register.png" width="200"/>
+</p>
+
+<p align="center">
+  <img src="screenshots/home1.png" width="200"/>
+  <img src="screenshots/home2.png" width="200"/>
+  <img src="screenshots/featured.png" width="200"/>
+</p>
+
+<p align="center">
+  <img src="screenshots/wishlist.png" width="200"/>
+  <img src="screenshots/cart.png" width="200"/>
+  <img src="screenshots/profile.png" width="200"/>
+</p>
+
+<p align="center">
+  <img src="screenshots/productdetails.png" width="200"/>
+  <img src="screenshots/sidedrawer.png" width="200"/>
+  <img src="screenshots/check1.png" width="200"/>
+  <img src="screenshots/check2.png" width="200"/>
+</p>
 
 ## 🛠️ Technologies Used
 
