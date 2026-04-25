@@ -18,9 +18,9 @@ This project focuses on creating a clean, responsive, and visually appealing use
 
 ---
 
-## 📱 Screens Included
+##  Screens Included
 
--## 📸 Screenshots
+-##  Screenshots
 
 <p align="center">
   <img src="screenshots/welcome.png" width="200"/>
