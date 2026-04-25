@@ -51,11 +51,3 @@ This project focuses on creating a clean, responsive, and visually appealing use
 
 - Flutter
 - Dart
-
----
-
-## 🚀 How to Run the Project
-
-```bash
-flutter pub get
-flutter run
