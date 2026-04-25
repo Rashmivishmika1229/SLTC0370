@@ -13,8 +13,6 @@ This project focuses on creating a clean, responsive, and visually appealing use
 - Cart management system
 - Product details screen
 - Login & Registration UI
-- Animated category drawer
-- Custom top navigation bar
 
 ---
 
