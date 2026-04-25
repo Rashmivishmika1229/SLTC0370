@@ -23,7 +23,7 @@ This project focuses on creating a clean, responsive, and visually appealing use
 This UI was designed using Figma before development.
 
 <p align="center">
-  <a href="https://www.figma.com/design/JFRXnldjzBUZikIXPdCy7c/app-assignment?node-id=36-805&t=mn8DddLN0XvGmWt5-1" target="_blank">
+  <a href="https://www.figma.com/design/JFRXnldjzBUZikIXPdCy7c/app-assignment?node-id=36-805&t=mn8DddLN0XvGmWt5-1">
     <img src="https://img.shields.io/badge/View%20Design-Figma-purple?style=for-the-badge&logo=figma"/>
   </a>
 </p
