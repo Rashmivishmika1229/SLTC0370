@@ -18,6 +18,14 @@ This project focuses on creating a clean, responsive, and visually appealing use
 
 ---
 
+## Figma Design
+
+<p align="center">
+  <a href="FIGMA UI">
+    <img src="[https://img.shields.io/badge/View%20Design-Figma-purple?style=for-the-badge&logo=figma](https://www.figma.com/design/JFRXnldjzBUZikIXPdCy7c/app-assignment?node-id=36-805&t=mn8DddLN0XvGmWt5-1)"/>
+  </a>
+</p>
+
 ##  Screens Included
 
 -##  Screenshots
