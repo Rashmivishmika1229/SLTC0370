@@ -18,7 +18,7 @@ This project focuses on creating a clean, responsive, and visually appealing use
 
 ---
 
-## 🎨 Figma Design
+##  Figma Design
 
 <p align="center">
   <a href="[YOUR_FIGMA_LINK_HERE](https://www.figma.com/design/JFRXnldjzBUZikIXPdCy7c/app-assignment?node-id=36-805&t=mn8DddLN0XvGmWt5-1)">
