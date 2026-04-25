@@ -1,17 +1,45 @@
-# chikk_shopping_app
+# 🛍️ CHIKK Shopping App (Flutter)
 
-A new Flutter project.
+A modern fashion shopping mobile application UI built using Flutter.  
+This project focuses on creating a clean, responsive, and visually appealing user interface inspired by a Figma prototype.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## ✨ Features
 
-A few resources to get you started if this is your first Flutter project:
+- Glassmorphism UI design
+- Fully responsive layouts
+- Wishlist functionality
+- Cart management system
+- 👗 Product details screen
+- Login & Registration UI
+- Animated category drawer
+- Custom top navigation bar
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+---
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 📱 Screens Included
+
+- Home Screen
+- Catalogue Screen
+- Product Details Screen
+- Wishlist Screen
+- Cart Screen
+- Profile Screen
+- Login Screen
+- Register Screen
+
+---
+
+## 🛠️ Technologies Used
+
+- Flutter
+- Dart
+
+---
+
+## 🚀 How to Run the Project
+
+```bash
+flutter pub get
+flutter run
