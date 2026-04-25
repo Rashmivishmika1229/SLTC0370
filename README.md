@@ -1,17 +1,17 @@
-# 🛍️ CHIKK Shopping App (Flutter)
+#  CHIKK Shopping App (Flutter)
 
 A modern fashion shopping mobile application UI built using Flutter.  
 This project focuses on creating a clean, responsive, and visually appealing user interface inspired by a Figma prototype.
 
 ---
 
-## ✨ Features
+##  Features
 
 - Glassmorphism UI design
 - Fully responsive layouts
 - Wishlist functionality
 - Cart management system
-- 👗 Product details screen
+- Product details screen
 - Login & Registration UI
 - Animated category drawer
 - Custom top navigation bar
@@ -47,7 +47,7 @@ This project focuses on creating a clean, responsive, and visually appealing use
   <img src="screenshots/check2.png" width="200"/>
 </p>
 
-## 🛠️ Technologies Used
+##  Technologies Used
 
 - Flutter
 - Dart
