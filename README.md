@@ -18,7 +18,7 @@ This project focuses on creating a clean, responsive, and visually appealing use
 
 ## Figma Design
 
-This UI was designed using Figma before development.
+This UI was designed using Figma before development. You can view it from below link.
 
 <p align="center">
   <a href="https://www.figma.com/design/JFRXnldjzBUZikIXPdCy7c/app-assignment?node-id=36-805&t=mn8DddLN0XvGmWt5-1">
