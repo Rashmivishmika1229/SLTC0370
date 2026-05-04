@@ -55,8 +55,6 @@ flutter:
 
   assets:
     - assets/images/welcome.jpg
-    - assets/images/login_bg.jpg
-    - assets/images/banner_model.png
     - assets/images/casual.jpg
     - assets/images/formal.jpg
     - assets/images/party.jpg
