@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -12,6 +13,44 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   bool obscurePassword = true;
   bool obscureConfirm = true;
+
+  final nameController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmController = TextEditingController();
+
+  Future<void> registerUser() async {
+    if (passwordController.text.trim() != confirmController.text.trim()) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Passwords do not match")));
+      return;
+    }
+
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+            email: emailController.text.trim(),
+
+            password: passwordController.text.trim(),
+          );
+
+      await userCredential.user!.updateDisplayName(nameController.text.trim());
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Registration Successful")));
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message ?? "Registration Failed")),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +88,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    Image.asset(
+                      "assets/images/v2-01.png",
+
+                      height: height * 0.20,
+
+                      fit: BoxFit.contain,
+                    ),
+
+                    SizedBox(height: height * 0.025),
+
                     TextField(
+                      controller: nameController,
                       style: const TextStyle(
                         color: Colors.white,
                         fontFamily: "OpenSansHebrew",
@@ -69,6 +119,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     SizedBox(height: height * 0.02),
 
                     TextField(
+                      controller: emailController,
                       style: const TextStyle(
                         color: Colors.white,
                         fontFamily: "OpenSansHebrew",
@@ -88,6 +139,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     SizedBox(height: height * 0.02),
 
                     TextField(
+                      controller: passwordController,
                       obscureText: obscurePassword,
                       style: const TextStyle(
                         color: Colors.white,
@@ -121,6 +173,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     SizedBox(height: height * 0.02),
 
                     TextField(
+                      controller: confirmController,
                       obscureText: obscureConfirm,
                       style: const TextStyle(
                         color: Colors.white,
@@ -153,12 +206,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                     SizedBox(height: height * 0.03),
 
+                    /// REGISTER
                     Material(
                       color: const Color(0xFFE8789D),
                       borderRadius: BorderRadius.circular(14),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(14),
-                        onTap: () {},
+                        onTap: registerUser,
                         child: SizedBox(
                           height: 55,
                           width: double.infinity,
@@ -180,6 +234,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                     SizedBox(height: height * 0.02),
 
+                    /// LOGIN LINK
                     InkWell(
                       onTap: () {
                         Navigator.pushReplacement(

@@ -1,8 +1,12 @@
+import 'dart:ui';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../services/cart_service.dart';
+import '../models/product_model.dart';
 import '../widgets/top_bar.dart';
 import '../widgets/category_drawer.dart';
 import 'productdetails_screen.dart';
-import 'dart:ui';
 
 class WishlistScreen extends StatefulWidget {
   const WishlistScreen({super.key});
@@ -14,15 +18,18 @@ class WishlistScreen extends StatefulWidget {
 class _WishlistScreenState extends State<WishlistScreen> {
   bool showDrawer = false;
 
-  List<int> products = List.generate(6, (index) => index);
+  final CartService cartService = CartService();
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    double scale(double size) => size * (width / 375);
+
+    double s(double value) => value * (width / 375);
+
+    final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+      backgroundColor: Colors.black,
 
       body: Stack(
         children: [
@@ -33,40 +40,334 @@ class _WishlistScreenState extends State<WishlistScreen> {
           Positioned.fill(
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+
               child: Container(color: Colors.transparent),
             ),
           ),
 
           Positioned.fill(
-            child: Container(color: Colors.black.withOpacity(0.8)),
+            child: Container(color: Colors.black.withOpacity(0.82)),
           ),
 
           SafeArea(
             child: Column(
               children: [
-                TopBar(onMenuTap: () => setState(() => showDrawer = true)),
+                TopBar(
+                  onMenuTap: () {
+                    setState(() {
+                      showDrawer = true;
+                    });
+                  },
+                ),
 
                 const SizedBox(height: 10),
 
                 const Text(
                   "WISH LIST",
+
                   style: TextStyle(
-                    fontFamily: "OpenSansHebrew",
                     color: Color(0xFFE8789D),
+
                     fontWeight: FontWeight.w800,
-                    fontSize: 22,
+
+                    fontSize: 18,
+
                     letterSpacing: 2,
                   ),
                 ),
 
-                const SizedBox(height: 15),
+                const SizedBox(height: 18),
 
+                /// ITEMS
                 Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(12),
-                    itemCount: products.length,
-                    itemBuilder: (context, index) {
-                      return WishlistTile(scale: scale);
+                  child: StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(user!.uid)
+                        .collection('wishlist')
+                        .snapshots(),
+
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                        return const Center(
+                          child: Text(
+                            "Wishlist is Empty",
+
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        );
+                      }
+
+                      final items = snapshot.data!.docs;
+
+                      return ListView.builder(
+                        padding: EdgeInsets.symmetric(horizontal: s(14)),
+
+                        itemCount: items.length,
+
+                        itemBuilder: (context, index) {
+                          final item = items[index];
+
+                          ProductModel product = ProductModel(
+                            id: item['productId'],
+
+                            name: item['name'],
+
+                            image: item['image'],
+
+                            price: (item['price']).toDouble(),
+
+                            description: item['description'] ?? '',
+
+                            category: item['category'] ?? '',
+                          );
+
+                          return Container(
+                            margin: EdgeInsets.only(bottom: s(14)),
+
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(22),
+
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(
+                                  sigmaX: 12,
+                                  sigmaY: 12,
+                                ),
+
+                                child: Container(
+                                  padding: EdgeInsets.all(s(10)),
+
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.08),
+
+                                    borderRadius: BorderRadius.circular(22),
+
+                                    border: Border.all(color: Colors.white24),
+                                  ),
+
+                                  child: Row(
+                                    children: [
+                                      /// IMAGE
+                                      GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+
+                                            MaterialPageRoute(
+                                              builder: (_) =>
+                                                  ProductDetailsScreen(
+                                                    product: product,
+                                                  ),
+                                            ),
+                                          );
+                                        },
+
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+
+                                          child: Image.network(
+                                            item['image'],
+
+                                            width: s(82),
+
+                                            height: s(96),
+
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+
+                                      SizedBox(width: s(12)),
+
+                                      /// DETAILS
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+
+                                          children: [
+                                            Text(
+                                              item['name'],
+
+                                              style: TextStyle(
+                                                color: Colors.white,
+
+                                                fontWeight: FontWeight.bold,
+
+                                                fontSize: s(12),
+                                              ),
+                                            ),
+
+                                            SizedBox(height: s(6)),
+
+                                            Text(
+                                              "LKR ${item['price']}",
+
+                                              style: TextStyle(
+                                                color: Colors.white70,
+
+                                                fontSize: s(10),
+                                              ),
+                                            ),
+
+                                            SizedBox(height: s(14)),
+
+                                            /// ADD TO CART
+                                            Material(
+                                              color: Colors.transparent,
+
+                                              child: InkWell(
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+
+                                                onTap: () async {
+                                                  await cartService.addToCart(
+                                                    product: product,
+
+                                                    quantity: 1,
+
+                                                    size: "M",
+                                                  );
+
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text(
+                                                        "Added to cart",
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
+
+                                                child: Container(
+                                                  padding: EdgeInsets.symmetric(
+                                                    horizontal: s(12),
+
+                                                    vertical: s(8),
+                                                  ),
+
+                                                  decoration: BoxDecoration(
+                                                    color: const Color(
+                                                      0xFFE8789D,
+                                                    ),
+
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          20,
+                                                        ),
+                                                  ),
+
+                                                  child: Row(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+
+                                                    children: [
+                                                      Text(
+                                                        "Add to cart",
+
+                                                        style: TextStyle(
+                                                          color: Colors.white,
+
+                                                          fontSize: s(10),
+                                                        ),
+                                                      ),
+
+                                                      SizedBox(width: s(6)),
+
+                                                      Icon(
+                                                        Icons.shopping_cart,
+
+                                                        size: s(13),
+
+                                                        color: Colors.white,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+
+                                      Column(
+                                        children: [
+                                          Material(
+                                            color: Colors.transparent,
+
+                                            child: InkWell(
+                                              borderRadius:
+                                                  BorderRadius.circular(30),
+
+                                              onTap: () async {
+                                                await FirebaseFirestore.instance
+                                                    .collection('users')
+                                                    .doc(user.uid)
+                                                    .collection('wishlist')
+                                                    .doc(item.id)
+                                                    .delete();
+                                              },
+
+                                              child: Padding(
+                                                padding: EdgeInsets.all(s(4)),
+
+                                                child: Icon(
+                                                  Icons.favorite,
+
+                                                  color: const Color(
+                                                    0xFFE8789D,
+                                                  ),
+
+                                                  size: s(20),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+
+                                          SizedBox(height: s(14)),
+
+                                          Material(
+                                            color: Colors.transparent,
+
+                                            child: InkWell(
+                                              borderRadius:
+                                                  BorderRadius.circular(30),
+
+                                              onTap: () async {
+                                                await FirebaseFirestore.instance
+                                                    .collection('users')
+                                                    .doc(user.uid)
+                                                    .collection('wishlist')
+                                                    .doc(item.id)
+                                                    .delete();
+                                              },
+
+                                              child: Padding(
+                                                padding: EdgeInsets.all(s(4)),
+
+                                                child: Icon(
+                                                  Icons.delete_outline,
+
+                                                  color: Colors.white,
+
+                                                  size: s(20),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      );
                     },
                   ),
                 ),
@@ -76,183 +377,18 @@ class _WishlistScreenState extends State<WishlistScreen> {
 
           if (showDrawer)
             GestureDetector(
-              onTap: () => setState(() => showDrawer = false),
+              onTap: () {
+                setState(() {
+                  showDrawer = false;
+                });
+              },
+
               child: Container(color: Colors.black.withOpacity(0.3)),
             ),
 
+          /// DRAWER
           if (showDrawer) CategoryDrawer(isOpen: showDrawer),
         ],
-      ),
-    );
-  }
-}
-
-class WishlistTile extends StatefulWidget {
-  final Function scale;
-
-  const WishlistTile({super.key, required this.scale});
-
-  @override
-  State<WishlistTile> createState() => _WishlistTileState();
-}
-
-class _WishlistTileState extends State<WishlistTile> {
-  bool isFav = true;
-
-  @override
-  Widget build(BuildContext context) {
-    final s = widget.scale;
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(22),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const ProductDetailsScreen()),
-        );
-      },
-      child: Container(
-        margin: EdgeInsets.only(bottom: s(12)),
-
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(22),
-
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-
-            child: Container(
-              padding: EdgeInsets.all(s(10)),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: Colors.white24),
-              ),
-
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Image.asset(
-                      "assets/images/bella2.png",
-                      width: s(80),
-                      height: s(90),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-
-                  SizedBox(width: s(10)),
-
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "BELLA SUMMER DRESS",
-                          style: TextStyle(
-                            fontFamily: "OpenSansHebrew",
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-
-                        SizedBox(height: s(4)),
-
-                        Text(
-                          "LKR 4800.00",
-                          style: TextStyle(
-                            fontFamily: "OpenSansHebrew",
-                            fontSize: 10,
-                            color: Colors.white70,
-                          ),
-                        ),
-
-                        SizedBox(height: s(10)),
-
-                        Material(
-                          color: const Color(0xFFE8789D),
-                          borderRadius: BorderRadius.circular(20),
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(20),
-                            onTap: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: const Text(
-                                    "Successfully added to cart",
-                                    style: TextStyle(
-                                      fontFamily: "OpenSansHebrew",
-                                    ),
-                                  ),
-                                  backgroundColor: Color.fromARGB(
-                                    200,
-                                    232,
-                                    120,
-                                    157,
-                                  ),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                            },
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(
-                                vertical: s(6),
-                                horizontal: s(12),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    "Add to cart",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: s(10),
-                                    ),
-                                  ),
-                                  SizedBox(width: s(6)),
-                                  Icon(
-                                    Icons.shopping_cart,
-                                    size: s(14),
-                                    color: Colors.white,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  Column(
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          setState(() => isFav = !isFav);
-                        },
-                        child: Icon(
-                          Icons.favorite,
-                          color: isFav ? const Color(0xFFE8789D) : Colors.grey,
-                          size: s(20),
-                        ),
-                      ),
-
-                      SizedBox(height: s(12)),
-
-                      GestureDetector(
-                        onTap: () {},
-                        child: Icon(
-                          Icons.delete_outline,
-                          color: Colors.white,
-                          size: s(20),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

@@ -9,7 +9,7 @@ class UnderConstructionScreen extends StatelessWidget {
       appBar: AppBar(title: Text("Coming Soon")),
       body: Center(
         child: Text(
-          "🚧 This feature is under construction",
+          "This feature is under construction",
           style: TextStyle(fontSize: 18),
           textAlign: TextAlign.center,
         ),

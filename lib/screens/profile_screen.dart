@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import '../widgets/top_bar.dart';
 import '../widgets/category_drawer.dart';
 import 'dart:ui';
+import 'myorders.dart';
+import 'shippingdetails_screen.dart';
+import 'settings_screen.dart';
+import 'help_support_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -47,31 +53,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 const SizedBox(height: 20),
 
-                Column(
-                  children: const [
-                    CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Color(0xFFE8789D),
-                      child: Icon(Icons.person, size: 40, color: Colors.white),
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      "User Name",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontFamily: "OpenSansHebrew",
-                      ),
-                    ),
-                    Text(
-                      "user@email.com",
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontFamily: "OpenSansHebrew",
-                      ),
-                    ),
-                  ],
+                CircleAvatar(
+                  radius: 40,
+                  backgroundColor: const Color(0xFFE8789D),
+                  child: const Icon(
+                    Icons.person,
+                    size: 40,
+                    color: Colors.white,
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                Text(
+                  FirebaseAuth.instance.currentUser?.email?.split("@").first ??
+                      "User",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontFamily: "OpenSansHebrew",
+                  ),
+                ),
+
+                Text(
+                  FirebaseAuth.instance.currentUser?.email ?? "No Email",
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontFamily: "OpenSansHebrew",
+                  ),
                 ),
 
                 const SizedBox(height: 30),
@@ -115,36 +125,101 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _profileItem(IconData icon, String title) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
+
       child: Material(
         color: Colors.white.withOpacity(0.05),
+
         borderRadius: BorderRadius.circular(12),
+
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
+
+          splashColor: Colors.white.withOpacity(0.08),
+
+          highlightColor: Colors.white.withOpacity(0.03),
+
           onTap: () {
+            /// MY ORDERS
+            if (title == "My Orders") {
+              Navigator.push(
+                context,
+
+                MaterialPageRoute(builder: (_) => const MyOrdersScreen()),
+              );
+
+              return;
+            }
+
+            /// SHIPPING ADDRESS
+            if (title == "Shipping Address") {
+              Navigator.push(
+                context,
+
+                MaterialPageRoute(
+                  builder: (_) => const ShippingAddressScreen(),
+                ),
+              );
+
+              return;
+            }
+
+            /// SETTINGS
+            if (title == "Settings") {
+              Navigator.push(
+                context,
+
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              );
+
+              return;
+            }
+
+            /// HELP & SUPPORT
+            if (title == "Help & Support") {
+              Navigator.push(
+                context,
+
+                MaterialPageRoute(builder: (_) => const HelpSupportScreen()),
+              );
+
+              return;
+            }
+
             print("$title clicked");
           },
+
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
+
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
+
               border: Border.all(color: Colors.white12),
             ),
+
             child: Row(
               children: [
                 Icon(icon, color: const Color(0xFFE8789D)),
+
                 const SizedBox(width: 12),
+
                 Expanded(
                   child: Text(
                     title,
+
                     style: const TextStyle(
                       color: Colors.white,
+
                       fontFamily: "OpenSansHebrew",
                     ),
                   ),
                 ),
+
                 const Icon(
                   Icons.arrow_forward_ios,
+
                   size: 14,
+
                   color: Colors.white70,
                 ),
               ],
@@ -159,14 +234,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Material(
       color: const Color(0xFFE8789D),
       borderRadius: BorderRadius.circular(20),
+
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
-        onTap: () {
-          print("Logout clicked");
+
+        onTap: () async {
+          await FirebaseAuth.instance.signOut();
+
+          if (!mounted) return;
+
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+            (route) => false,
+          );
         },
+
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14),
+
           alignment: Alignment.center,
+
           child: const Text(
             "LOGOUT",
             style: TextStyle(

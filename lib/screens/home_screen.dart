@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import '../widgets/top_bar.dart';
 import 'catalogue_screen.dart';
 import '../widgets/category_drawer.dart';
+import 'search_results_screen.dart';
 import 'dart:ui';
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,12 +17,35 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool showDrawer = false;
 
+  final user = FirebaseAuth.instance.currentUser;
+
+  final TextEditingController searchController = TextEditingController();
+
+  List<String> suggestions = [];
+
+  final List<String> searchItems = [
+    "Casual wear",
+    "Party wear",
+    "Formal wear",
+    "Ethnic wear",
+    "Sports wear",
+    "Dresses",
+    "Dress",
+    "Active Wear",
+    "Ethnic Saree",
+    "Lounge wear",
+    "T shirt",
+    "Skirts",
+  ];
+
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
 
+    double s(double value) => value * (width / 375);
+
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+      backgroundColor: Colors.black,
 
       body: Stack(
         children: [
@@ -31,6 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Positioned.fill(
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+
               child: Container(color: Colors.transparent),
             ),
           ),
@@ -44,9 +70,12 @@ class _HomeScreenState extends State<HomeScreen> {
               gradient: LinearGradient(
                 colors: [
                   const Color.fromARGB(132, 0, 0, 0).withOpacity(0.7),
+
                   const Color.fromARGB(48, 0, 0, 0),
                 ],
+
                 begin: Alignment.bottomCenter,
+
                 end: Alignment.topCenter,
               ),
             ),
@@ -66,15 +95,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
+
                     child: Align(
                       alignment: Alignment.centerLeft,
+
                       child: Text(
-                        "WELCOME, USER!",
+                        "Welcome, ${user?.displayName?.split(' ').first ?? 'User'}!",
+
                         style: TextStyle(
+                          color: Colors.white,
                           fontFamily: "OpenSansHebrew",
-                          fontSize: 14,
+
+                          fontSize: s(14),
+
                           fontWeight: FontWeight.bold,
-                          color: const Color.fromARGB(221, 255, 255, 255),
                         ),
                       ),
                     ),
@@ -82,110 +116,386 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   const SizedBox(height: 8),
 
+                  /// SEARCH BAR
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Container(
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              textAlignVertical: TextAlignVertical.center,
-                              decoration: InputDecoration(
-                                hintText: "",
-                                hintStyle: TextStyle(
-                                  fontFamily: "OpenSansHebrew",
-                                  fontSize: 10,
-                                  color: Colors.grey,
-                                ),
-                                border: InputBorder.none,
-                              ),
-                            ),
+
+                    child: Column(
+                      children: [
+                        Container(
+                          height: 40,
+
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+
+                            borderRadius: BorderRadius.circular(25),
                           ),
-                          Material(
-                            color: Colors.transparent,
-                            shape: const CircleBorder(),
-                            child: InkWell(
-                              customBorder: const CircleBorder(),
-                              onTap: () {
-                                print("Search tapped");
+
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: searchController,
+
+                                  onChanged: (value) {
+                                    setState(() {
+                                      suggestions = searchItems
+                                          .where(
+                                            (item) => item
+                                                .toLowerCase()
+                                                .contains(value.toLowerCase()),
+                                          )
+                                          .toList();
+                                    });
+                                  },
+
+                                  style: const TextStyle(fontSize: 11),
+
+                                  decoration: const InputDecoration(
+                                    hintText: "Search products...",
+
+                                    border: InputBorder.none,
+                                  ),
+                                ),
+                              ),
+
+                              Material(
+                                color: Colors.transparent,
+
+                                shape: const CircleBorder(),
+
+                                child: InkWell(
+                                  customBorder: const CircleBorder(),
+
+                                  onTap: () {
+                                    if (searchController.text.trim().isEmpty) {
+                                      return;
+                                    }
+
+                                    Navigator.push(
+                                      context,
+
+                                      MaterialPageRoute(
+                                        builder: (_) => SearchResultsScreen(
+                                          searchQuery: searchController.text,
+                                        ),
+                                      ),
+                                    );
+                                  },
+
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(6),
+
+                                    child: Icon(
+                                      Icons.search,
+
+                                      color: Color(0xFFE8789D),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        /// SUGGESTIONS
+                        if (searchController.text.isNotEmpty &&
+                            suggestions.isNotEmpty)
+                          Container(
+                            margin: const EdgeInsets.only(top: 8),
+
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+
+                            child: ListView.builder(
+                              shrinkWrap: true,
+
+                              physics: const NeverScrollableScrollPhysics(),
+
+                              itemCount: suggestions.length,
+
+                              itemBuilder: (context, index) {
+                                return ListTile(
+                                  title: Text(
+                                    suggestions[index],
+
+                                    style: const TextStyle(fontSize: 11),
+                                  ),
+
+                                  onTap: () {
+                                    searchController.text = suggestions[index];
+
+                                    setState(() {
+                                      suggestions = [];
+                                    });
+
+                                    Navigator.push(
+                                      context,
+
+                                      MaterialPageRoute(
+                                        builder: (_) => SearchResultsScreen(
+                                          searchQuery: searchController.text,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
                               },
-                              child: const Padding(
-                                padding: EdgeInsets.all(6),
-                                child: Icon(
-                                  Icons.search,
-                                  color: Color(0xFFE8789D),
-                                ),
-                              ),
                             ),
                           ),
-                        ],
-                      ),
+                      ],
                     ),
                   ),
 
                   const SizedBox(height: 10),
 
+                  /// OFFER BANNER
                   SizedBox(
                     height: 180,
+
                     child: Stack(
                       clipBehavior: Clip.none,
+
                       children: [
                         Positioned(
                           top: 40,
+
                           child: Container(
-                            height: 122,
+                            height: 132,
+
                             width: width,
+
                             color: const Color.fromARGB(182, 232, 120, 157),
                           ),
                         ),
 
                         Positioned(
                           right: 90,
+
                           top: 50,
+
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
+
                             children: [
                               const Text(
                                 "20% Off\nwith",
+
                                 textAlign: TextAlign.right,
+
                                 style: TextStyle(color: Colors.white),
                               ),
+
                               const SizedBox(height: 4),
+
                               const Text(
                                 "Party Wear",
+
                                 style: TextStyle(
                                   color: Colors.white,
+
                                   fontSize: 23,
+
                                   fontWeight: FontWeight.bold,
+
                                   fontFamily: "PlayfairDisplay",
                                 ),
                               ),
+
                               const SizedBox(height: 3),
 
                               Material(
                                 color: Colors.white,
+
                                 borderRadius: BorderRadius.circular(20),
+
                                 child: InkWell(
                                   borderRadius: BorderRadius.circular(20),
+
                                   onTap: () {
-                                    print("More offers tapped");
+                                    showDialog(
+                                      context: context,
+
+                                      barrierColor: Colors.black.withOpacity(
+                                        0.45,
+                                      ),
+
+                                      builder: (context) {
+                                        return Dialog(
+                                          backgroundColor: Colors.transparent,
+
+                                          insetPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 28,
+                                              ),
+
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(
+                                              34,
+                                            ),
+
+                                            child: BackdropFilter(
+                                              filter: ImageFilter.blur(
+                                                sigmaX: 20,
+                                                sigmaY: 20,
+                                              ),
+
+                                              child: Container(
+                                                padding: const EdgeInsets.all(
+                                                  24,
+                                                ),
+
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white
+                                                      .withOpacity(0.08),
+
+                                                  borderRadius:
+                                                      BorderRadius.circular(34),
+
+                                                  border: Border.all(
+                                                    color: Colors.white12,
+                                                  ),
+                                                ),
+
+                                                child: Column(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+
+                                                  children: [
+                                                    Text(
+                                                      "SPECIAL OFFER",
+
+                                                      style: TextStyle(
+                                                        color: const Color(
+                                                          0xFFE8789D,
+                                                        ),
+
+                                                        fontSize: 18,
+
+                                                        fontWeight:
+                                                            FontWeight.bold,
+
+                                                        letterSpacing: 1.2,
+                                                      ),
+                                                    ),
+
+                                                    const SizedBox(height: 26),
+
+                                                    Row(
+                                                      children: [
+                                                        const Text(
+                                                          "🎉",
+                                                          style: TextStyle(
+                                                            fontSize: 22,
+                                                          ),
+                                                        ),
+
+                                                        const SizedBox(
+                                                          width: 12,
+                                                        ),
+
+                                                        Expanded(
+                                                          child: Text(
+                                                            "50% DISCOUNT FOR NEW USERS!",
+
+                                                            style: TextStyle(
+                                                              color:
+                                                                  Colors.white,
+
+                                                              fontSize: 15,
+
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+
+                                                    const SizedBox(height: 34),
+
+                                                    Align(
+                                                      alignment:
+                                                          Alignment.centerRight,
+
+                                                      child: Material(
+                                                        color:
+                                                            Colors.transparent,
+
+                                                        child: InkWell(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                14,
+                                                              ),
+
+                                                          onTap: () {
+                                                            Navigator.pop(
+                                                              context,
+                                                            );
+                                                          },
+
+                                                          child: Padding(
+                                                            padding:
+                                                                const EdgeInsets.symmetric(
+                                                                  horizontal:
+                                                                      14,
+                                                                  vertical: 8,
+                                                                ),
+
+                                                            child: Text(
+                                                              "OK",
+
+                                                              style: TextStyle(
+                                                                color:
+                                                                    const Color(
+                                                                      0xFFE8789D,
+                                                                    ),
+
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+
+                                                                fontSize: 14,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    );
                                   },
+
                                   child: const Padding(
                                     padding: EdgeInsets.symmetric(
                                       horizontal: 14,
+
                                       vertical: 6,
                                     ),
+
                                     child: Text(
                                       "MORE OFFERS",
+
                                       style: TextStyle(
                                         fontSize: 10,
+
                                         color: Color(0xFFE8789D),
+
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -197,10 +507,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
 
                         Positioned(
-                          left: 50,
+                          left: 20,
+
                           bottom: 18,
+
                           child: Image.asset(
                             "assets/images/banner2.png",
+
                             height: 180,
                           ),
                         ),
@@ -217,6 +530,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+
           if (showDrawer)
             GestureDetector(
               onTap: () {
@@ -224,14 +538,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   showDrawer = false;
                 });
               },
-              child: Container(
-                color: const Color.fromARGB(
-                  255,
-                  254,
-                  253,
-                  253,
-                ).withOpacity(0.3),
-              ),
+
+              child: Container(color: Colors.white.withOpacity(0.3)),
             ),
 
           if (showDrawer) CategoryDrawer(isOpen: showDrawer),
@@ -255,16 +563,22 @@ class _CategorySectionState extends State<CategorySection> {
 
   final List<Map<String, String>> categories = [
     {"name": "CASUAL", "image": "assets/images/casual.jpg"},
+
     {"name": "FORMAL", "image": "assets/images/formal.jpg"},
+
     {"name": "PARTY", "image": "assets/images/party.jpg"},
+
     {"name": "ACTIVE", "image": "assets/images/active.jpg"},
+
     {"name": "ETHNIC", "image": "assets/images/ethnic.jpg"},
+
     {"name": "LOUNGE", "image": "assets/images/lounge.jpg"},
   ];
 
   @override
   void dispose() {
     _controller.dispose();
+
     super.dispose();
   }
 
@@ -274,16 +588,20 @@ class _CategorySectionState extends State<CategorySection> {
 
     return Column(
       children: [
-        /// TITLE
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
+
           child: Align(
             alignment: Alignment.centerLeft,
+
             child: Text(
               "CATEGORIES",
+
               style: TextStyle(
                 color: Color(0xFFE8789D),
+
                 fontWeight: FontWeight.bold,
+
                 letterSpacing: 2,
               ),
             ),
@@ -294,18 +612,25 @@ class _CategorySectionState extends State<CategorySection> {
 
         SizedBox(
           height: 150,
+
           child: Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back_ios),
+                icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+
                 onPressed: () {
-                  if (!_controller.hasClients) return;
+                  if (!_controller.hasClients) {
+                    return;
+                  }
+
                   if (currentPage > 0) {
                     final newPage = currentPage - 1;
 
                     _controller.animateToPage(
                       newPage,
+
                       duration: const Duration(milliseconds: 300),
+
                       curve: Curves.easeInOut,
                     );
 
@@ -339,6 +664,7 @@ class _CategorySectionState extends State<CategorySection> {
 
                     return Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+
                       children: items.map((cat) {
                         return Expanded(child: _CategoryCard(cat));
                       }).toList(),
@@ -348,16 +674,21 @@ class _CategorySectionState extends State<CategorySection> {
               ),
 
               IconButton(
-                icon: const Icon(Icons.arrow_forward_ios),
+                icon: const Icon(Icons.arrow_forward_ios, color: Colors.white),
+
                 onPressed: () {
-                  if (!_controller.hasClients) return;
+                  if (!_controller.hasClients) {
+                    return;
+                  }
 
                   if (currentPage < totalPages - 1) {
                     final newPage = currentPage + 1;
 
                     _controller.animateToPage(
                       newPage,
+
                       duration: const Duration(milliseconds: 300),
+
                       curve: Curves.easeInOut,
                     );
 
@@ -387,63 +718,53 @@ class _CategoryCard extends StatefulWidget {
 }
 
 class _CategoryCardState extends State<_CategoryCard> {
-  bool isHovering = false;
-
   @override
   Widget build(BuildContext context) {
     final cat = widget.cat;
 
-    return MouseRegion(
-      onEnter: (_) => setState(() => isHovering = true),
-      onExit: (_) => setState(() => isHovering = false),
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
 
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const CatalogueScreen()),
-          );
-        },
+          MaterialPageRoute(builder: (_) => const CatalogueScreen()),
+        );
+      },
 
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          margin: const EdgeInsets.symmetric(horizontal: 6),
-          height: 140,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 6),
 
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(14),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: Image.asset(cat["image"]!, fit: BoxFit.cover),
-                ),
+        height: 140,
 
-                Positioned.fill(
-                  child: Container(color: Colors.black.withOpacity(0.35)),
-                ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(14),
 
-                Positioned.fill(
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    color: isHovering
-                        ? Colors.black.withOpacity(0.25)
-                        : Colors.transparent,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: Image.asset(cat["image"]!, fit: BoxFit.cover),
+              ),
+
+              Positioned.fill(
+                child: Container(color: Colors.black.withOpacity(0.35)),
+              ),
+
+              Center(
+                child: Text(
+                  cat["name"]!,
+
+                  style: const TextStyle(
+                    color: Colors.white,
+
+                    fontSize: 14,
+
+                    fontWeight: FontWeight.bold,
+
+                    letterSpacing: 1.5,
                   ),
                 ),
-
-                Center(
-                  child: Text(
-                    cat["name"]!,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -462,33 +783,40 @@ class _PopularDealsSectionState extends State<PopularDealsSection> {
   final PageController _controller = PageController();
 
   int currentPage = 0;
+
   Timer? _timer;
 
   final List<Map<String, String>> deals = [
     {
       "name": "Jen Turtleneck Tee",
+
       "price": "LKR 8,500",
+
       "image": "assets/images/casual.jpg",
     },
+
     {
       "name": "Glimmer Dress",
+
       "price": "LKR 10,500",
+
       "image": "assets/images/ethnic.jpg",
     },
+
     {
       "name": "Hypersport Duo",
+
       "price": "LKR 6,000",
+
       "image": "assets/images/active.jpg",
     },
+
     {
       "name": "Evenstar Gown",
+
       "price": "LKR 12,000",
+
       "image": "assets/images/party.jpg",
-    },
-    {
-      "name": "Lolita Summer Dress",
-      "price": "LKR 7,500",
-      "image": "assets/images/lounge.jpg",
     },
   ];
 
@@ -497,7 +825,9 @@ class _PopularDealsSectionState extends State<PopularDealsSection> {
     super.initState();
 
     _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      if (!_controller.hasClients) return;
+      if (!_controller.hasClients) {
+        return;
+      }
 
       currentPage++;
 
@@ -507,7 +837,9 @@ class _PopularDealsSectionState extends State<PopularDealsSection> {
 
       _controller.animateToPage(
         currentPage,
+
         duration: const Duration(milliseconds: 500),
+
         curve: Curves.easeInOut,
       );
     });
@@ -516,7 +848,9 @@ class _PopularDealsSectionState extends State<PopularDealsSection> {
   @override
   void dispose() {
     _timer?.cancel();
+
     _controller.dispose();
+
     super.dispose();
   }
 
@@ -526,13 +860,18 @@ class _PopularDealsSectionState extends State<PopularDealsSection> {
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
+
           child: Align(
             alignment: Alignment.centerLeft,
+
             child: Text(
               "POPULAR DEALS",
+
               style: TextStyle(
                 color: Color(0xFFE8789D),
+
                 fontWeight: FontWeight.bold,
+
                 letterSpacing: 2,
               ),
             ),
@@ -543,14 +882,12 @@ class _PopularDealsSectionState extends State<PopularDealsSection> {
 
         SizedBox(
           height: 220,
+
           child: PageView.builder(
             controller: _controller,
 
-            onPageChanged: (index) {
-              currentPage = index;
-            },
-
             itemCount: deals.length,
+
             itemBuilder: (context, index) {
               return _dealCard(deals[index]);
             },
@@ -563,14 +900,11 @@ class _PopularDealsSectionState extends State<PopularDealsSection> {
   }
 
   Widget _dealCard(Map<String, String> deal) {
-    final name = deal["name"] ?? "No Name";
-    final price = deal["price"] ?? "";
-    final image = deal["image"] ?? "";
-
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
+
           MaterialPageRoute(builder: (_) => const CatalogueScreen()),
         );
       },
@@ -580,12 +914,11 @@ class _PopularDealsSectionState extends State<PopularDealsSection> {
 
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
+
           child: Stack(
             children: [
               Positioned.fill(
-                child: image.isNotEmpty
-                    ? Image.asset(image, fit: BoxFit.cover)
-                    : Container(color: Colors.grey), // fallback
+                child: Image.asset(deal["image"]!, fit: BoxFit.cover),
               ),
 
               Positioned.fill(
@@ -594,10 +927,14 @@ class _PopularDealsSectionState extends State<PopularDealsSection> {
                     gradient: LinearGradient(
                       colors: [
                         Colors.black.withOpacity(0.6),
+
                         Colors.transparent,
+
                         Colors.black.withOpacity(0.6),
                       ],
+
                       begin: Alignment.topCenter,
+
                       end: Alignment.bottomCenter,
                     ),
                   ),
@@ -607,15 +944,19 @@ class _PopularDealsSectionState extends State<PopularDealsSection> {
               Positioned(
                 bottom: 16,
                 left: 16,
-                right: 16,
+
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+
                   children: [
                     Text(
-                      name,
+                      deal["name"]!,
+
                       style: const TextStyle(
                         color: Colors.white,
+
                         fontSize: 16,
+
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -623,9 +964,11 @@ class _PopularDealsSectionState extends State<PopularDealsSection> {
                     const SizedBox(height: 4),
 
                     Text(
-                      price,
+                      deal["price"]!,
+
                       style: const TextStyle(
                         color: Colors.white70,
+
                         fontSize: 13,
                       ),
                     ),

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
-
 import 'home_screen.dart';
 import 'catalogue_screen.dart';
 import 'wishlist_screen.dart';
 import 'cart_screen.dart';
 import 'profile_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -79,22 +80,92 @@ class _MainNavigationState extends State<MainNavigation> {
                 selectedIconTheme: const IconThemeData(size: 24),
                 unselectedIconTheme: const IconThemeData(size: 24),
 
-                items: const [
-                  BottomNavigationBarItem(
+                items: [
+                  const BottomNavigationBarItem(
                     icon: Icon(Icons.grid_view),
+
                     label: "",
                   ),
-                  BottomNavigationBarItem(
+
+                  const BottomNavigationBarItem(
                     icon: Icon(Icons.favorite_border),
+
                     label: "",
                   ),
-                  BottomNavigationBarItem(icon: Icon(Icons.home), label: ""),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.shopping_cart_outlined),
+
+                  const BottomNavigationBarItem(
+                    icon: Icon(Icons.home),
+
                     label: "",
                   ),
+
+                  /// CART WITH BADGE
                   BottomNavigationBarItem(
+                    label: "",
+
+                    icon: StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(FirebaseAuth.instance.currentUser!.uid)
+                          .collection('cart')
+                          .snapshots(),
+
+                      builder: (context, snapshot) {
+                        int cartCount = 0;
+
+                        if (snapshot.hasData) {
+                          cartCount = snapshot.data!.docs.length;
+                        }
+
+                        return Stack(
+                          clipBehavior: Clip.none,
+
+                          children: [
+                            const Icon(Icons.shopping_cart_outlined),
+
+                            if (cartCount > 0)
+                              Positioned(
+                                right: -6,
+                                top: -5,
+
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFFE8789D),
+
+                                    shape: BoxShape.circle,
+                                  ),
+
+                                  constraints: const BoxConstraints(
+                                    minWidth: 18,
+                                    minHeight: 18,
+                                  ),
+
+                                  child: Text(
+                                    cartCount.toString(),
+
+                                    textAlign: TextAlign.center,
+
+                                    style: const TextStyle(
+                                      color: Colors.white,
+
+                                      fontSize: 10,
+
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+
+                  const BottomNavigationBarItem(
                     icon: Icon(Icons.person_outline),
+
                     label: "",
                   ),
                 ],

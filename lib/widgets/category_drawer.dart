@@ -1,6 +1,9 @@
 import 'dart:ui';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../screens/welcome_screen.dart';
+
+import '../screens/login_screen.dart';
 
 class CategoryDrawer extends StatefulWidget {
   final bool isOpen;
@@ -54,6 +57,17 @@ class _CategoryDrawerState extends State<CategoryDrawer>
     super.dispose();
   }
 
+  /// FIREBASE LOGOUT
+  Future<void> logoutUser() async {
+    await FirebaseAuth.instance.signOut();
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SlideTransition(
@@ -65,13 +79,16 @@ class _CategoryDrawerState extends State<CategoryDrawer>
           child: Container(
             width: MediaQuery.of(context).size.width * 0.72,
             height: double.infinity,
+
             child: Stack(
               children: [
+                /// BLUR BACKGROUND
                 BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
                   child: Container(color: Colors.black.withOpacity(0.3)),
                 ),
 
+                /// GLASS EFFECT
                 Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -82,6 +99,7 @@ class _CategoryDrawerState extends State<CategoryDrawer>
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
+
                     border: Border(
                       left: BorderSide(
                         color: Colors.white.withOpacity(0.2),
@@ -91,14 +109,30 @@ class _CategoryDrawerState extends State<CategoryDrawer>
                   ),
                 ),
 
+                /// CONTENT
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
                     vertical: 60,
                   ),
+
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      /// LOGO
+                      Center(
+                        child: Image.asset(
+                          "assets/images/v2-01.png",
+
+                          height: 90,
+                          width: 90,
+
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+
+                      const SizedBox(height: 28),
+
                       const Text(
                         "CATEGORIES",
                         style: TextStyle(
@@ -111,6 +145,7 @@ class _CategoryDrawerState extends State<CategoryDrawer>
 
                       const SizedBox(height: 30),
 
+                      /// CATEGORY ITEMS
                       Expanded(
                         child: SingleChildScrollView(
                           child: Column(
@@ -129,24 +164,24 @@ class _CategoryDrawerState extends State<CategoryDrawer>
 
                       const SizedBox(height: 5),
 
+                      /// LOGOUT BUTTON
                       Material(
                         color: const Color(0xFFE8789D),
+
                         borderRadius: BorderRadius.circular(20),
+
                         child: InkWell(
                           borderRadius: BorderRadius.circular(20),
-                          onTap: () {
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const WelcomeScreen(),
-                              ),
-                              (route) => false,
-                            );
-                          },
+
+                          onTap: logoutUser,
+
                           child: Container(
                             width: double.infinity,
+
                             padding: const EdgeInsets.symmetric(vertical: 14),
+
                             alignment: Alignment.center,
+
                             child: const Text(
                               "LOGOUT",
                               style: TextStyle(
@@ -170,6 +205,7 @@ class _CategoryDrawerState extends State<CategoryDrawer>
     );
   }
 
+  /// CATEGORY ITEM
   Widget _item(String title) {
     bool isSelected = selectedItem == title;
 
@@ -179,20 +215,29 @@ class _CategoryDrawerState extends State<CategoryDrawer>
           selectedItem = title;
         });
       },
+
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
+
         margin: const EdgeInsets.symmetric(vertical: 6),
+
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
+
           color: isSelected ? const Color(0xFFE8789D).withOpacity(0.2) : null,
         ),
+
         child: Text(
           title,
           style: TextStyle(
             fontFamily: "OpenSansHebrew",
+
             fontSize: 14,
+
             letterSpacing: 2,
+
             color: isSelected ? Colors.white : Colors.white70,
           ),
         ),

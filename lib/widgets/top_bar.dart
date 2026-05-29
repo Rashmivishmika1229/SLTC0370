@@ -8,14 +8,18 @@ class TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
+
+      
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+         
           IconButton(
             icon: const Icon(
+              
               Icons.arrow_back_ios,
-              color: Colors.white,
+              color: Color.fromARGB(0, 255, 255, 255),
               size: 20,
             ),
             onPressed: () {

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1013787800751",
+    "project_id": "chikk-shopping-app",
+    "storage_bucket": "chikk-shopping-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1013787800751:android:9973c5aa5f11f3205d105a",
+        "android_client_info": {
+          "package_name": "com.example.chikk_shopping_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB9KpFKRjaKcFvBf6T4ojChDv2H2m9swjU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

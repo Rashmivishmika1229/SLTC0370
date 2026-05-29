@@ -1,8 +1,12 @@
+import 'dart:ui';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../services/cart_service.dart';
 import '../widgets/top_bar.dart';
 import '../widgets/category_drawer.dart';
 import 'checkout_screen.dart';
-import 'dart:ui';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -14,272 +18,454 @@ class CartScreen extends StatefulWidget {
 class _CartScreenState extends State<CartScreen> {
   bool showDrawer = false;
 
-  List<int> products = List.generate(3, (index) => index);
+  final CartService cartService = CartService();
 
-  List<bool> selected = [true, true, true];
-  List<int> qty = [1, 1, 1];
+  final Set<String> selectedItems = {};
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    double scale(double size) => size * (width / 375);
+
+    double s(num value) => value.toDouble() * (width / 375);
 
     return Scaffold(
-      backgroundColor: const Color.fromARGB(243, 0, 0, 0),
+      backgroundColor: Colors.black,
+
       body: Stack(
         children: [
+          
           Positioned.fill(
             child: Image.asset("assets/images/bg2.jpg", fit: BoxFit.cover),
           ),
 
+    
           Positioned.fill(
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+
               child: Container(color: Colors.transparent),
             ),
           ),
 
+        
           Positioned.fill(
-            child: Container(color: Colors.black.withOpacity(0.8)),
+            child: Container(color: Colors.black.withOpacity(0.82)),
           ),
 
           SafeArea(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  TopBar(onMenuTap: () => setState(() => showDrawer = true)),
+            child: Column(
+              children: [
+                /// TOP BAR
+                TopBar(
+                  onMenuTap: () {
+                    setState(() {
+                      showDrawer = true;
+                    });
+                  },
+                ),
 
-                  const SizedBox(height: 10),
+                const SizedBox(height: 10),
 
-                  const Text(
-                    "CART",
-                    style: TextStyle(
-                      fontFamily: "OpenSansHebrew",
-                      color: Color(0xFFE8789D),
-                      fontWeight: FontWeight.w800,
-                      fontSize: 22,
-                      letterSpacing: 2,
-                    ),
+               
+                const Text(
+                  "CART",
+
+                  style: TextStyle(
+                    color: Color(0xFFE8789D),
+
+                    fontWeight: FontWeight.w800,
+
+                    fontSize: 18,
+
+                    letterSpacing: 2,
                   ),
+                ),
 
-                  const SizedBox(height: 10),
+                const SizedBox(height: 14),
 
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(12),
-                    itemCount: products.length,
-                    itemBuilder: (context, index) {
-                      return _cartTile(scale, index);
-                    },
-                  ),
+                Expanded(
+                  child: StreamBuilder<QuerySnapshot>(
+                    stream: cartService.getCartItems(),
 
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 12),
-                    padding: EdgeInsets.all(scale(10)),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "SHIPPING FEE",
-                          style: TextStyle(color: Colors.white70),
-                        ),
-                        Text(
-                          "LKR 500.00",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ],
-                    ),
-                  ),
+                    builder: (context, snapshot) {
+                
+                      if (!snapshot.hasData) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
 
-                  SizedBox(height: scale(12)),
+                      final cartItems = snapshot.data!.docs;
 
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Material(
-                      color: const Color(0xFFE8789D),
-                      borderRadius: BorderRadius.circular(25),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(25),
-                        splashColor: Colors.white.withOpacity(0.3),
-                        highlightColor: Colors.white.withOpacity(0.1),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const CheckoutScreen(),
-                            ),
-                          );
-                        },
-                        child: Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.symmetric(vertical: scale(14)),
-                          alignment: Alignment.center,
+                      
+                      if (cartItems.isEmpty) {
+                        return const Center(
                           child: Text(
-                            "PROCEED TO CHECKOUT   LKR 19,600.00",
-                            style: TextStyle(
-                              fontFamily: "OpenSansHebrew",
-                              color: Colors.white,
-                              fontSize: scale(12),
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 2,
+                            "Cart is Empty",
+
+                            style: TextStyle(color: Colors.white, fontSize: 18),
+                          ),
+                        );
+                      }
+
+                
+                      double subtotal = 0;
+
+                      for (var item in cartItems) {
+                        if (selectedItems.contains(item.id)) {
+                          subtotal +=
+                              ((item['price'] ?? 0) as num).toDouble() *
+                              ((item['quantity'] ?? 1) as num).toDouble();
+                        }
+                      }
+
+                      double shipping = selectedItems.isEmpty ? 0 : 500;
+
+                      double total = subtotal + shipping;
+
+                      return ListView(
+                        padding: const EdgeInsets.only(bottom: 24),
+
+                        children: [
+                       
+                          ListView.builder(
+                            shrinkWrap: true,
+
+                            physics: const NeverScrollableScrollPhysics(),
+
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+
+                            itemCount: cartItems.length,
+
+                            itemBuilder: (context, index) {
+                              final item = cartItems[index];
+
+                              return _cartTile(s, item);
+                            },
+                          ),
+
+                          /// SHIPPING
+                          Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 14),
+
+                            padding: EdgeInsets.all(s(12)),
+
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.08),
+
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+                              children: [
+                                const Text(
+                                  "SHIPPING FEE",
+
+                                  style: TextStyle(color: Colors.white70),
+                                ),
+
+                                Text(
+                                  "LKR ${shipping.toStringAsFixed(2)}",
+
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              ],
                             ),
                           ),
-                        ),
-                      ),
-                    ),
-                  ),
 
-                  const SizedBox(height: 20),
-                ],
-              ),
+                          SizedBox(height: s(14)),
+
+                          /// CHECKOUT 
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+
+                            child: Material(
+                              color: const Color(0xFFE8789D),
+
+                              borderRadius: BorderRadius.circular(22),
+
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(22),
+
+                                onTap: selectedItems.isEmpty
+                                    ? null
+                                    : () {
+                                        final selectedProducts = cartItems
+                                            .where(
+                                              (item) => selectedItems.contains(
+                                                item.id,
+                                              ),
+                                            )
+                                            .map(
+                                              (item) => {
+                                                "name": item['name'],
+
+                                                "image": item['image'],
+
+                                                "price": item['price'],
+
+                                                "qty": item['quantity'],
+
+                                                "size": item['size'],
+                                              },
+                                            )
+                                            .toList();
+
+                                        Navigator.push(
+                                          context,
+
+                                          MaterialPageRoute(
+                                            builder: (_) => CheckoutScreen(
+                                              orderedProducts: selectedProducts,
+                                            ),
+                                          ),
+                                        );
+                                      },
+
+                                child: Container(
+                                  width: double.infinity,
+
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: s(14),
+                                  ),
+
+                                  alignment: Alignment.center,
+
+                                  child: Text(
+                                    "CHECKOUT   LKR ${total.toStringAsFixed(2)}",
+
+                                    style: TextStyle(
+                                      color: Colors.white,
+
+                                      fontSize: s(12),
+
+                                      fontWeight: FontWeight.bold,
+
+                                      letterSpacing: 1.5,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
 
+        
           if (showDrawer)
             GestureDetector(
-              onTap: () => setState(() => showDrawer = false),
+              onTap: () {
+                setState(() {
+                  showDrawer = false;
+                });
+              },
+
               child: Container(color: Colors.black.withOpacity(0.3)),
             ),
 
-          if (showDrawer)
-  CategoryDrawer(isOpen: showDrawer),
+          /// DRAWER
+          if (showDrawer) CategoryDrawer(isOpen: showDrawer),
         ],
       ),
     );
   }
 
-  Widget _cartTile(Function scale, int index) {
+  Widget _cartTile(double Function(num) s, QueryDocumentSnapshot item) {
+    bool selected = selectedItems.contains(item.id);
+
     return Container(
-      margin: EdgeInsets.only(bottom: scale(12)),
+      margin: EdgeInsets.only(bottom: s(14)),
+
       child: ClipRRect(
         borderRadius: BorderRadius.circular(22),
+
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+
           child: Container(
-            padding: EdgeInsets.all(scale(10)),
+            padding: EdgeInsets.all(s(10)),
+
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.08),
+
               borderRadius: BorderRadius.circular(22),
+
               border: Border.all(color: Colors.white24),
             ),
+
             child: Row(
               children: [
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      selected[index] = !selected[index];
-                    });
-                  },
-                  child: Container(
-                    margin: EdgeInsets.only(right: scale(10)),
-                    width: scale(18),
-                    height: scale(18),
-                    decoration: BoxDecoration(
-                      color: selected[index]
-                          ? const Color(0xFFE8789D)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Colors.white),
+                /// TICK
+                Material(
+                  color: Colors.transparent,
+
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(30),
+
+                    onTap: () {
+                      setState(() {
+                        if (selected) {
+                          selectedItems.remove(item.id);
+                        } else {
+                          selectedItems.add(item.id);
+                        }
+                      });
+                    },
+
+                    child: Container(
+                      width: s(22),
+
+                      height: s(22),
+
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+
+                        color: selected
+                            ? const Color(0xFFE8789D)
+                            : Colors.transparent,
+
+                        border: Border.all(color: const Color(0xFFE8789D)),
+                      ),
+
+                      child: selected
+                          ? Icon(Icons.check, size: s(14), color: Colors.white)
+                          : null,
                     ),
-                    child: selected[index]
-                        ? Icon(
-                            Icons.check,
-                            size: scale(12),
-                            color: Colors.white,
-                          )
-                        : null,
                   ),
                 ),
 
+                SizedBox(width: s(10)),
+
+                /// IMAGE
                 ClipRRect(
                   borderRadius: BorderRadius.circular(16),
-                  child: Image.asset(
-                    "assets/images/bella2.png",
-                    width: scale(80),
-                    height: scale(100),
+
+                  child: Image.network(
+                    item['image'] ?? "",
+
+                    width: s(70),
+
+                    height: s(82),
+
                     fit: BoxFit.cover,
+
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: s(70),
+
+                        height: s(82),
+
+                        color: Colors.white10,
+
+                        child: const Icon(
+                          Icons.broken_image,
+
+                          color: Colors.white54,
+                        ),
+                      );
+                    },
                   ),
                 ),
 
-                SizedBox(width: scale(12)),
+                SizedBox(width: s(12)),
 
+                /// DETAILS
                 Expanded(
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
+
                     crossAxisAlignment: CrossAxisAlignment.start,
+
                     children: [
                       Text(
-                        "BELLA SUMMER DRESS",
+                        item['name'] ?? "",
+
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: scale(10),
-                          fontFamily: "OpenSansHebrew",
+
+                          fontSize: s(11),
+
                           fontWeight: FontWeight.bold,
                         ),
                       ),
 
-                      SizedBox(height: scale(5)),
+                      SizedBox(height: s(6)),
 
                       Text(
-                        "Size  S",
+                        "Size ${(item['size'] ?? 'M')}",
+
                         style: TextStyle(
                           color: Colors.white70,
-                          fontSize: scale(10),
+
+                          fontSize: s(10),
                         ),
                       ),
 
-                      SizedBox(height: scale(10)),
+                      SizedBox(height: s(10)),
 
-                      Row(
-                        children: [
-                          _qtyBtn("-", scale, () {
-                            if (qty[index] > 1) {
-                              setState(() => qty[index]--);
-                            }
-                          }),
+                      Text(
+                        "Quantity : ${(item['quantity'] ?? 1)}",
 
-                          SizedBox(width: scale(6)),
-
-                          Text(
-                            "${qty[index]}",
-                            style: const TextStyle(color: Colors.white),
-                          ),
-
-                          SizedBox(width: scale(6)),
-
-                          _qtyBtn("+", scale, () {
-                            setState(() => qty[index]++);
-                          }),
-                        ],
+                        style: TextStyle(color: Colors.white, fontSize: s(10)),
                       ),
                     ],
                   ),
                 ),
 
+          
                 Column(
+                  mainAxisSize: MainAxisSize.min,
+
                   crossAxisAlignment: CrossAxisAlignment.end,
+
                   children: [
-                    InkWell(
-                      onTap: () {},
-                      child: Icon(
-                        Icons.delete_outline,
-                        color: Colors.white,
-                        size: scale(20),
+                   
+                    Material(
+                      color: Colors.transparent,
+
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(30),
+
+                        onTap: () async {
+                          await FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(FirebaseAuth.instance.currentUser!.uid)
+                              .collection('cart')
+                              .doc(item.id)
+                              .delete();
+                        },
+
+                        child: Padding(
+                          padding: EdgeInsets.all(s(4)),
+
+                          child: Icon(
+                            Icons.delete_outline,
+
+                            color: Colors.white,
+
+                            size: s(20),
+                          ),
+                        ),
                       ),
                     ),
 
-                    SizedBox(height: scale(40)),
+                    SizedBox(height: s(26)),
 
+                    /// PRICE
                     Text(
-                      "LKR 4800.00",
+                      "LKR ${(((item['price'] ?? 0) as num).toDouble() * ((item['quantity'] ?? 1) as num).toDouble()).toStringAsFixed(2)}",
+
                       style: TextStyle(
-                        fontFamily: "OpenSansHebrew",
                         color: Colors.white,
-                        fontSize: scale(10),
+
+                        fontSize: s(10),
+
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -289,22 +475,6 @@ class _CartScreenState extends State<CartScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _qtyBtn(String text, Function scale, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: scale(24),
-        height: scale(20),
-        alignment: Alignment.center,
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          color: Color(0xFFE8789D),
-        ),
-        child: Text(text, style: const TextStyle(color: Colors.white)),
       ),
     );
   }
